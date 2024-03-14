@@ -1,0 +1,40 @@
+version: "3.9"
+services:
+  postgres:
+    container_name: db
+    image: "postgres:14.4"
+    healthcheck:
+      test: [ "CMD", "pg_isready", "-q", "-d", "postgres", "-U", "root" ]
+      timeout: 45s
+      interval: 10s
+      retries: 10
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: trafiklab
+      POSTGRES_HOST: postgres
+    networks:
+      - local
+    ports:
+      - "5432:5432"
+
+  pgadmin:
+    container_name: pgadmin
+    image: "dpage/pgadmin4:5.1"
+    environment:
+      PGADMIN_DEFAULT_EMAIL: postgres@domain.local
+      PGADMIN_DEFAULT_PASSWORD: postgres
+    ports:
+      - "5050:80"
+    networks:
+      - local
+
+networks:
+  local:
+    name: local
+    driver: bridge
+
+volumes:
+  postgres_data:
