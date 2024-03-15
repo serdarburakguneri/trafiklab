@@ -190,7 +190,8 @@ An alternative solution would be to ignore the old data and only save the latest
   It ignores existing data not to duplicate it
   during the fetch. However, it doesn't delete the data that is not present in the Trafiklab API anymore. A cache
   database and a good cache invalidation strategy
-  would be beneficial for this case. With a relational database, solving this problem looks like a challenge.
+  would be beneficial for this case. With a relational database, solving this problem looks like a challenge. ( One
+  solution may be marking the records that are present and deleting the records that are not marked.)
 
 - For a real time application, CQRS may be a good choice. We may have an application that is responsible for fetching
   the data from the Trafiklab API and storing it in the database.
