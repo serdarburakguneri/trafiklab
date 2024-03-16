@@ -1,4 +1,4 @@
-package com.sbg.trafiklab.datasync;
+package com.sbg.trafiklab.datasyncer;
 
 import static org.mockito.Mockito.*;
 import static org.junit.jupiter.api.Assertions.*;
@@ -6,36 +6,26 @@ import static org.junit.jupiter.api.Assertions.*;
 import com.fasterxml.jackson.core.JsonParser;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.sbg.trafiklab.integration.dto.SLStopPoint;
-import com.sbg.trafiklab.integration.client.SLApiClient;
-import com.sbg.trafiklab.service.StopPointService;
+import com.sbg.trafiklab.service.StopService;
 import java.io.IOException;
 import java.time.LocalDate;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.mockito.Mock;
 import org.springframework.core.io.ResourceLoader;
 
-class StopPointDataSyncerTest {
+class StopDataSyncerTest {
 
-    private StopPointDataSyncer stopPointDataSyncer;
-
-    @Mock
+    private StopDataSyncer stopDataSyncer;
     private ObjectMapper mockObjectMapper;
-    @Mock
     private ResourceLoader mockResourceLoader;
-    @Mock
-    private StopPointService mockStopPointService;
-    @Mock
-    private SLApiClient mockSlApiClient;
+    private StopService mockStopService;
 
     @BeforeEach
     void setUp() {
         mockObjectMapper = mock(ObjectMapper.class);
         mockResourceLoader = mock(ResourceLoader.class);
-        mockStopPointService = mock(StopPointService.class);
-        mockSlApiClient = mock(SLApiClient.class);
-        stopPointDataSyncer = new StopPointDataSyncer(mockObjectMapper, mockResourceLoader, mockStopPointService,
-                mockSlApiClient);
+        mockStopService = mock(StopService.class);
+        stopDataSyncer = new StopDataSyncer(mockObjectMapper, mockResourceLoader, mockStopService);
     }
 
     @Test
@@ -48,7 +38,7 @@ class StopPointDataSyncerTest {
 
         when(mockObjectMapper.readValue(mockJsonParser, SLStopPoint.class)).thenReturn(sampleData);
 
-        var result = stopPointDataSyncer.convertJsonNodeToEntity(mockJsonParser);
+        var result = stopDataSyncer.convertJsonNodeToEntity(mockJsonParser);
 
         verify(mockObjectMapper, times(1)).readValue(mockJsonParser, SLStopPoint.class);
         assertNotNull(result);

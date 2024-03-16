@@ -1,13 +1,20 @@
 package com.sbg.trafiklab.repository;
 
 import com.sbg.trafiklab.entity.Line;
-import org.springframework.data.r2dbc.repository.Query;
-import org.springframework.data.repository.reactive.ReactiveCrudRepository;
+import com.sbg.trafiklab.entity.Stop;
+import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
-public interface LineRepository extends ReactiveCrudRepository<Line, Long> {
+public interface LineRepository {
 
-    @Query("SELECT * FROM line WHERE line_number = :lineNumber ORDER BY exists_from_date DESC LIMIT 1")
-    Mono<Line> findByLineNumber(String lineNumber);
+    Mono<Line> save(Line line);
 
+    Mono<Line> addStopToLine(Line line, Stop stop);
+
+    Mono<Line> findByLineNumber(String id);
+
+    Flux<Line> findAll();
+
+    Mono<Long> deleteAll();
+    Mono<Long> getStopCount(Line line);
 }

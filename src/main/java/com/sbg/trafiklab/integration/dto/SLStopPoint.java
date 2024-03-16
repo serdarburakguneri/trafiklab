@@ -2,7 +2,7 @@ package com.sbg.trafiklab.integration.dto;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import java.time.LocalDate;
+import java.util.Date;
 
 public record SLStopPoint(
         @JsonProperty("StopPointNumber")
@@ -21,9 +21,9 @@ public record SLStopPoint(
         String stopAreaTypeCode,
         @JsonProperty("LastModifiedUtcDateTime")
         @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd HH:mm:ss.SSS")
-        LocalDate lastModifiedUtcDateTime,
+        Date lastModifiedUtcDateTime,
         @JsonProperty("ExistsFromDate")
         @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd HH:mm:ss.SSS")
-        LocalDate existsFromDate) {
+        Date existsFromDate) {
 
 }

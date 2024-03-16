@@ -1,17 +1,13 @@
-package com.sbg.trafiklab.datasync;
+package com.sbg.trafiklab.datasyncer;
 
 import com.fasterxml.jackson.core.JsonFactory;
 import com.fasterxml.jackson.core.JsonParser;
 import com.fasterxml.jackson.core.JsonToken;
-import com.sbg.trafiklab.util.FileUtil;
 import java.io.IOException;
 import java.nio.file.Path;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.core.io.ResourceLoader;
-import org.springframework.core.io.buffer.DataBuffer;
-import org.springframework.core.io.buffer.DataBufferUtils;
-import org.springframework.transaction.annotation.Transactional;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
@@ -26,35 +22,19 @@ public abstract class AbstractSLDataSyncer<T> {
         this.resourceLoader = resourceLoader;
     }
 
-    @Transactional
-    public Mono<Void> syncData() {
+    public Mono<Boolean> syncData() {
         logger.info("Syncing data started.");
-        return saveApiDataToJsonFile()
-                .thenMany(readEntitiesFromJsonFile())
+        return readEntitiesFromJsonFile()
                 .flatMap(this::saveEntity)
                 .doOnComplete(() -> logger.info("Syncing data completed."))
-                .then(Mono.empty());
+                .onErrorResume(e -> {
+                    logger.error("Error during data sync: {}", e.getMessage(), e);
+                    return Mono.error(new RuntimeException("Error during data synchronization", e));
+                })
+                .then(Mono.just(true))
+                .onErrorReturn(false);
     }
 
-    protected Mono<Path> createJsonFile() {
-        return Mono.fromCallable(this::getFilePath)
-                .flatMap(path -> Mono.fromCallable(() -> {
-                    FileUtil.createFileIfNotPresent(path);
-                    return path;
-                }))
-                .onErrorMap(IOException.class, e -> {
-                    logger.error("IOException occurred while creating json file.", e);
-                    return new IllegalStateException("Failed to create file", e);
-                });
-    }
-
-    protected Mono<Void> saveApiDataToJsonFile() {
-        return createJsonFile()
-                .flatMap(p -> {
-                    var data = fetchDataFromAPI();
-                    return DataBufferUtils.write(data, p);
-                });
-    }
 
     protected Flux<T> readEntitiesFromJsonFile() {
         return Flux.create(fluxSink -> {
@@ -81,9 +61,7 @@ public abstract class AbstractSLDataSyncer<T> {
                             fluxSink.error(new IllegalStateException(errorMessage));
                             return;
                         }
-                    }
-
-                    if ("Result".equals(fieldName)) {
+                    } else if ("Result".equals(fieldName)) {
                         parser.nextToken();
                         while (parser.nextToken() != JsonToken.END_ARRAY) {
                             fluxSink.next(convertJsonNodeToEntity(parser));
@@ -106,8 +84,6 @@ public abstract class AbstractSLDataSyncer<T> {
 
     protected abstract T convertJsonNodeToEntity(JsonParser parser) throws IOException;
 
-    protected abstract Flux<DataBuffer> fetchDataFromAPI();
-
-    protected abstract Mono<T> saveEntity(T entity);
+    protected abstract Mono<Void> saveEntity(T entity);
 }
 

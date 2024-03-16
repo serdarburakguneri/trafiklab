@@ -1,21 +1,20 @@
-package com.sbg.trafiklab.datasync;
+package com.sbg.trafiklab.datasyncer;
 
 import com.fasterxml.jackson.core.JsonParser;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.sbg.trafiklab.integration.dto.SLJourneyPattern;
-import com.sbg.trafiklab.integration.client.SLApiClient;
 import com.sbg.trafiklab.mapper.JourneyPatternMapper;
 import com.sbg.trafiklab.entity.JourneyPattern;
-import com.sbg.trafiklab.service.JourneyPatternService;
+import com.sbg.trafiklab.service.LineService;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.io.ResourceLoader;
-import org.springframework.core.io.buffer.DataBuffer;
 import org.springframework.stereotype.Service;
-import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 @Service
@@ -24,18 +23,17 @@ public class JourneyPatternDataSyncer extends AbstractSLDataSyncer<JourneyPatter
     @Value("${trafiklab.data.journey.filepath}")
     private String filePath;
     private final ObjectMapper objectMapper;
-    private final JourneyPatternService journeyPatternService;
-    private final SLApiClient slApiClient;
+    private final LineService lineService;
+
+    private static final Logger logger = LoggerFactory.getLogger(JourneyPatternDataSyncer.class);
 
     @Autowired
     public JourneyPatternDataSyncer(ObjectMapper objectMapper,
             ResourceLoader resourceLoader,
-            JourneyPatternService journeyPatternService,
-            SLApiClient slApiClient) {
+            LineService lineService) {
         super(resourceLoader);
         this.objectMapper = objectMapper;
-        this.journeyPatternService = journeyPatternService;
-        this.slApiClient = slApiClient;
+        this.lineService = lineService;
     }
 
     @Override
@@ -50,13 +48,14 @@ public class JourneyPatternDataSyncer extends AbstractSLDataSyncer<JourneyPatter
     }
 
     @Override
-    protected Flux<DataBuffer> fetchDataFromAPI() {
-        return slApiClient.fetchJourneyPatterns().bodyToFlux(DataBuffer.class);
+    protected Mono<Void> saveEntity(JourneyPattern entity) {
+        return lineService.addStopToLine(entity.getLineNumber(), entity.getStopPointNumber())
+                .onErrorResume(e -> {
+                    logger.error("An error occurred while handling journey pattern: {}", e.getMessage(), e);
+                    return Mono.empty(); // Let's not stop the whole process if one entity fails to save
+                })
+                .then(Mono.empty());
     }
 
-    @Override
-    protected Mono<JourneyPattern> saveEntity(JourneyPattern entity) {
-        return journeyPatternService.save(entity);
-    }
 }
 

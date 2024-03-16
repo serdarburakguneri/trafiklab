@@ -2,9 +2,9 @@ package com.sbg.trafiklab.scheduler;
 
 import static org.mockito.Mockito.*;
 
-import com.sbg.trafiklab.datasync.JourneyPatternDataSyncer;
-import com.sbg.trafiklab.datasync.LineDataSyncer;
-import com.sbg.trafiklab.datasync.StopPointDataSyncer;
+import com.sbg.trafiklab.datasyncer.JourneyPatternDataSyncer;
+import com.sbg.trafiklab.datasyncer.LineDataSyncer;
+import com.sbg.trafiklab.datasyncer.StopDataSyncer;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.InjectMocks;
@@ -19,7 +19,7 @@ public class TrafficDataSyncSchedulerTest {
     private LineDataSyncer lineDataSyncer;
 
     @Mock
-    private StopPointDataSyncer stopPointDataSyncer;
+    private StopDataSyncer stopDataSyncer;
 
     @Mock
     private JourneyPatternDataSyncer journeyPatternDataSyncer;
@@ -31,7 +31,7 @@ public class TrafficDataSyncSchedulerTest {
     public void setup() {
         MockitoAnnotations.openMocks(this);
         when(lineDataSyncer.syncData()).thenReturn(Mono.empty());
-        when(stopPointDataSyncer.syncData()).thenReturn(Mono.empty());
+        when(stopDataSyncer.syncData()).thenReturn(Mono.empty());
         when(journeyPatternDataSyncer.syncData()).thenReturn(Mono.empty());
     }
 
@@ -40,7 +40,7 @@ public class TrafficDataSyncSchedulerTest {
         trafficDataSyncScheduler.syncTrafficData();
 
         verify(lineDataSyncer, times(1)).syncData();
-        verify(stopPointDataSyncer, times(1)).syncData();
+        verify(stopDataSyncer, times(1)).syncData();
         verify(journeyPatternDataSyncer, times(1)).syncData();
     }
 

@@ -3,6 +3,7 @@ package com.sbg.trafiklab.integration.dto;
 import com.fasterxml.jackson.annotation.JsonFormat;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import java.time.LocalDate;
+import java.util.Date;
 
 
 public record SLLineData(
@@ -16,9 +17,9 @@ public record SLLineData(
         String DefaultTransportModeCode,
         @JsonProperty("LastModifiedUtcDateTime")
         @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd HH:mm:ss.SSS")
-        LocalDate LastModifiedUtcDateTime,
+        Date LastModifiedUtcDateTime,
         @JsonProperty("ExistsFromDate")
         @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd HH:mm:ss.SSS")
-        LocalDate ExistsFromDate) {
+        Date ExistsFromDate) {
 
 }

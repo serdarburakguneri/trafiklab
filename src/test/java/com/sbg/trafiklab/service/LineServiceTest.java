@@ -33,7 +33,7 @@ public class LineServiceTest {
         when(lineRepository.findByLineNumber("100")).thenReturn(Mono.empty());
         when(lineRepository.save(newLine)).thenReturn(Mono.just(newLine));
 
-        var result = lineService.save(newLine);
+        var result = lineService.create(newLine);
 
         StepVerifier.create(result)
                 .expectNext(newLine)
@@ -49,7 +49,7 @@ public class LineServiceTest {
 
         when(lineRepository.findByLineNumber("100")).thenReturn(Mono.just(existingLine));
 
-        var result = lineService.save(existingLine);
+        var result = lineService.create(existingLine);
 
         StepVerifier.create(result)
                 .expectNext(existingLine)
@@ -67,7 +67,7 @@ public class LineServiceTest {
         when(lineRepository.findByLineNumber("100")).thenReturn(Mono.empty());
         when(lineRepository.save(newLine)).thenReturn(Mono.error(exception));
 
-        var result = lineService.save(newLine);
+        var result = lineService.create(newLine);
 
         StepVerifier.create(result)
                 .expectErrorMatches(throwable -> throwable instanceof RuntimeException

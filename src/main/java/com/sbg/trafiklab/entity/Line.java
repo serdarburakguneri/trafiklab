@@ -1,22 +1,16 @@
 package com.sbg.trafiklab.entity;
 
-import java.time.LocalDate;
-import org.springframework.data.annotation.Id;
-import org.springframework.data.relational.core.mapping.Column;
-import org.springframework.data.relational.core.mapping.Table;
+import java.util.Date;
+import java.util.List;
+import java.util.Objects;
 
-
-@Table("line")
 public class Line {
 
-    @Id
-    private Long id;
-
-    @Column("line_number")
     private String lineNumber;
 
-    @Column("exists_from_date")
-    private LocalDate existsFromDate;
+    private Date existsFromDate;
+
+    private List<Stop> stops = List.of();
 
     public String getLineNumber() {
         return lineNumber;
@@ -26,19 +20,37 @@ public class Line {
         this.lineNumber = lineNumber;
     }
 
-    public Long getId() {
-        return id;
-    }
-
-    public void setId(Long id) {
-        this.id = id;
-    }
-
-    public LocalDate getExistsFromDate() {
+    public Date getExistsFromDate() {
         return existsFromDate;
     }
 
-    public void setExistsFromDate(LocalDate existsFromDate) {
+    public void setExistsFromDate(Date existsFromDate) {
         this.existsFromDate = existsFromDate;
+    }
+
+    public List<Stop> getStops() {
+        return stops;
+    }
+
+    public void addStop(Stop stop) {
+        stops.add(stop);
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+        if (this == obj) {
+            return true;
+        }
+        if (obj == null || getClass() != obj.getClass()) {
+            return false;
+        }
+        Line other = (Line) obj;
+        return Objects.equals(lineNumber, other.lineNumber) &&
+                Objects.equals(existsFromDate, other.existsFromDate);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(lineNumber, existsFromDate);
     }
 }

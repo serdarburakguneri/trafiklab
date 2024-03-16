@@ -1,21 +1,20 @@
-package com.sbg.trafiklab.datasync;
+package com.sbg.trafiklab.datasyncer;
 
 import com.fasterxml.jackson.core.JsonParser;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.sbg.trafiklab.integration.dto.SLLineData;
-import com.sbg.trafiklab.integration.client.SLApiClient;
 import com.sbg.trafiklab.mapper.LineMapper;
 import com.sbg.trafiklab.entity.Line;
 import com.sbg.trafiklab.service.LineService;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.io.ResourceLoader;
-import org.springframework.core.io.buffer.DataBuffer;
 import org.springframework.stereotype.Service;
-import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 
@@ -27,17 +26,15 @@ public class LineDataSyncer extends AbstractSLDataSyncer<Line> {
 
     private final ObjectMapper objectMapper;
     private final LineService lineService;
-    private final SLApiClient slApiClient;
+    private static final Logger logger = LoggerFactory.getLogger(LineDataSyncer.class);
 
     @Autowired
     public LineDataSyncer(ObjectMapper objectMapper,
             ResourceLoader resourceLoader,
-            LineService lineService,
-            SLApiClient slApiClient) {
+            LineService lineService) {
         super(resourceLoader);
         this.objectMapper = objectMapper;
         this.lineService = lineService;
-        this.slApiClient = slApiClient;
     }
 
     @Override
@@ -52,13 +49,13 @@ public class LineDataSyncer extends AbstractSLDataSyncer<Line> {
     }
 
     @Override
-    protected Flux<DataBuffer> fetchDataFromAPI() {
-        return slApiClient.fetchLines().bodyToFlux(DataBuffer.class);
-    }
-
-    @Override
-    protected Mono<Line> saveEntity(Line entity) {
-        return lineService.save(entity);
+    protected Mono<Void> saveEntity(Line entity) {
+        return lineService.create(entity)
+                .onErrorResume(e -> {
+                    logger.error("An error occurred while handling line: {}", e.getMessage(), e);
+                    return Mono.empty(); // Let's not stop the whole process if one entity fails to save
+                })
+                .then(Mono.empty());
     }
 }
 

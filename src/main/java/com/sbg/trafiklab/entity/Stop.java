@@ -3,24 +3,13 @@ package com.sbg.trafiklab.entity;
 import java.util.Date;
 import java.util.Objects;
 
-
-public class JourneyPattern {
-
-    private String lineNumber;
+public class Stop {
 
     private String stopPointNumber;
 
-    private String direction;
+    private String stopPointName;
 
     private Date existsFromDate;
-
-    public String getLineNumber() {
-        return lineNumber;
-    }
-
-    public void setLineNumber(String lineNumber) {
-        this.lineNumber = lineNumber;
-    }
 
     public String getStopPointNumber() {
         return stopPointNumber;
@@ -30,12 +19,12 @@ public class JourneyPattern {
         this.stopPointNumber = stopPointNumber;
     }
 
-    public String getDirection() {
-        return direction;
+    public String getStopPointName() {
+        return stopPointName;
     }
 
-    public void setDirection(String direction) {
-        this.direction = direction;
+    public void setStopPointName(String stopPointName) {
+        this.stopPointName = stopPointName;
     }
 
     public Date getExistsFromDate() {
@@ -54,15 +43,14 @@ public class JourneyPattern {
         if (obj == null || getClass() != obj.getClass()) {
             return false;
         }
-        JourneyPattern other = (JourneyPattern) obj;
-        return Objects.equals(lineNumber, other.lineNumber) &&
-                Objects.equals(stopPointNumber, other.stopPointNumber) &&
-                Objects.equals(direction, other.direction) &&
+        Stop other = (Stop) obj;
+        return Objects.equals(stopPointNumber, other.stopPointNumber) &&
+                Objects.equals(stopPointName, other.stopPointName) &&
                 Objects.equals(existsFromDate, other.existsFromDate);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(lineNumber, stopPointNumber, direction, existsFromDate);
+        return Objects.hash(stopPointNumber, stopPointName, existsFromDate);
     }
 }
