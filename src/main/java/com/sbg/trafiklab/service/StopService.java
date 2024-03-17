@@ -1,6 +1,7 @@
 package com.sbg.trafiklab.service;
 
 import com.sbg.trafiklab.entity.Stop;
+import com.sbg.trafiklab.exception.EntityCreationFailureException;
 import com.sbg.trafiklab.repository.StopRepository;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -22,16 +23,21 @@ public class StopService {
     }
 
     public Mono<Stop> create(Stop stop) {
-        return stopRepository.save(stop);
-    }
-
-    public Mono<Stop> findByStopPointNumber(String stopPointNumber) {
-        return stopRepository.findByStopNumber(stopPointNumber);
+        return stopRepository.create(stop)
+                .onErrorResume(e -> {
+                    var message = "An error occurred while creating stop.";
+                    logger.error(message, e);
+                    return Mono.error(new EntityCreationFailureException(message, e));
+                });
     }
 
     public Flux<Stop> findAll(int limit) {
         return stopRepository.findAll()
                 .take(limit);
+    }
+
+    public Mono<Long> deleteAll() {
+        return stopRepository.deleteAll();
     }
 
 }

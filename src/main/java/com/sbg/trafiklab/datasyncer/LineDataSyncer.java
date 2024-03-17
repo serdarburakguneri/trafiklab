@@ -52,7 +52,7 @@ public class LineDataSyncer extends AbstractSLDataSyncer<Line> {
     protected Mono<Void> saveEntity(Line entity) {
         return lineService.create(entity)
                 .onErrorResume(e -> {
-                    logger.error("An error occurred while handling line: {}", e.getMessage(), e);
+                    logger.warn("An error occurred while handling line: {}", e.getMessage(), e);
                     return Mono.empty(); // Let's not stop the whole process if one entity fails to save
                 })
                 .then(Mono.empty());

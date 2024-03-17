@@ -1,7 +1,6 @@
 package com.sbg.trafiklab.util;
 
 import com.sbg.trafiklab.dto.LineDTO;
-import com.sbg.trafiklab.entity.JourneyPattern;
 import com.sbg.trafiklab.entity.Line;
 import com.sbg.trafiklab.entity.Stop;
 import com.sbg.trafiklab.service.LineService;
@@ -15,9 +14,7 @@ import org.springframework.stereotype.Service;
 public class DatabaseTestUtil {
 
     private final LineService lineService;
-
     private final StopService stopService;
-
 
     @Autowired
     public DatabaseTestUtil(LineService lineService, StopService stopService) {
@@ -25,27 +22,27 @@ public class DatabaseTestUtil {
         this.stopService = stopService;
     }
 
+    public void clearDatabase() {
+        lineService.deleteAll().block();
+        stopService.deleteAll().block();
+    }
 
-    public void createDataSet(List<LineDTO> journeys) {
-        journeys.forEach(journey -> {
+    public void createDataSet(List<LineDTO> lines) {
+        lines.forEach(lineDTO -> {
             var modifyDate = new Date();
             var line = new Line();
-            line.setLineNumber(journey.lineNumber());
+            line.setLineNumber(lineDTO.lineNumber());
             line.setExistsFromDate(modifyDate);
             lineService.create(line).block();
 
-            journey.stops().forEach(stop -> {
-                var stopPoint = new Stop();
-                stopPoint.setStopPointNumber(stop.stopPointNumber());
-                stopPoint.setStopPointName(stop.stopPointName());
-                stopPoint.setExistsFromDate(modifyDate);
-                stopService.create(stopPoint).block();
+            lineDTO.stops().forEach(stopDTO -> {
+                var stop = new Stop();
+                stop.setStopNumber(stopDTO.stopPointNumber());
+                stop.setStopName(stopDTO.stopPointName());
+                stop.setExistsFromDate(modifyDate);
+                stopService.create(stop).block();
 
-                var journeyPattern = new JourneyPattern();
-                journeyPattern.setLineNumber(journey.lineNumber());
-                journeyPattern.setStopPointNumber(stop.stopPointNumber());
-                journeyPattern.setDirection("1");
-                journeyPattern.setExistsFromDate(modifyDate);
+                lineService.addStopToLine(line.getLineNumber(), stop.getStopNumber()).block();
             });
         });
     }

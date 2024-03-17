@@ -9,29 +9,30 @@ import com.sbg.trafiklab.integration.dto.SLJourneyPattern;
 import com.sbg.trafiklab.service.LineService;
 import com.sbg.trafiklab.service.StopService;
 import java.io.IOException;
-import java.time.LocalDate;
+import java.util.Date;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.MockitoAnnotations;
 import org.springframework.core.io.ResourceLoader;
 
-class JourneyPatternDataSyncerTest {
+public class JourneyPatternDataSyncerTest {
 
-    private JourneyPatternDataSyncer journeyPatternDataSyncer;
+    @Mock
     private ObjectMapper mockObjectMapper;
+    @Mock
     private ResourceLoader mockResourceLoader;
+    @Mock
     private LineService mockLineService;
+    @Mock
     private StopService mockStopService;
+    @InjectMocks
+    private JourneyPatternDataSyncer journeyPatternDataSyncer;
 
     @BeforeEach
     void setUp() {
-        mockObjectMapper = mock(ObjectMapper.class);
-        mockResourceLoader = mock(ResourceLoader.class);
-        mockLineService = mock(LineService.class);
-        mockStopService = mock(StopService.class);
-        journeyPatternDataSyncer = new JourneyPatternDataSyncer(mockObjectMapper,
-                mockResourceLoader,
-                mockLineService,
-                mockStopService);
+        MockitoAnnotations.openMocks(this);
     }
 
     @Test
@@ -39,7 +40,7 @@ class JourneyPatternDataSyncerTest {
         var mockJsonParser = mock(JsonParser.class);
         var lineNumber = 1;
         var pointNumber = 1;
-        var lastModified = LocalDate.now().minusDays(1);
+        var lastModified = new Date();
         var sampleData = new SLJourneyPattern(lineNumber, 1, pointNumber, lastModified, lastModified);
         when(mockObjectMapper.readValue(mockJsonParser, SLJourneyPattern.class)).thenReturn(sampleData);
 
@@ -49,8 +50,7 @@ class JourneyPatternDataSyncerTest {
         assertNotNull(result);
         assertEquals(Integer.toString(lineNumber), result.getLineNumber());
         assertEquals(lastModified, result.getExistsFromDate());
-        assertEquals(Integer.toString(pointNumber), result.getStopPointNumber());
+        assertEquals(Integer.toString(pointNumber), result.getStopNumber());
     }
-
 
 }

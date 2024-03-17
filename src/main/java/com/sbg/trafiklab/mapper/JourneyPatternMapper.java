@@ -9,7 +9,7 @@ public class JourneyPatternMapper {
     public static JourneyPattern fromSLJourneyPatter(SLJourneyPattern slJourneyPattern) {
         var journeyPattern = new JourneyPattern();
         journeyPattern.setLineNumber(Integer.toString(slJourneyPattern.lineNumber()));
-        journeyPattern.setStopPointNumber(Integer.toString(slJourneyPattern.journeyPatternPointNumber()));
+        journeyPattern.setStopNumber(Integer.toString(slJourneyPattern.journeyPatternPointNumber()));
         journeyPattern.setDirection(Integer.toString(slJourneyPattern.directionCode()));
         journeyPattern.setExistsFromDate(slJourneyPattern.existsFromDate());
         return journeyPattern;

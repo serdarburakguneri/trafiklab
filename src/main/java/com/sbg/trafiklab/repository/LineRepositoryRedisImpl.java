@@ -2,10 +2,8 @@ package com.sbg.trafiklab.repository;
 
 import com.sbg.trafiklab.entity.Line;
 import com.sbg.trafiklab.entity.Stop;
-import com.sbg.trafiklab.exception.EntityNotFoundException;
+import com.sbg.trafiklab.exception.EntityCreationFailureException;
 import java.util.List;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.redis.core.ReactiveRedisOperations;
 import org.springframework.stereotype.Service;
@@ -15,74 +13,99 @@ import reactor.core.publisher.Mono;
 @Service
 public class LineRepositoryRedisImpl implements LineRepository {
 
-    private static final String LINE_ENTITY_KEY_PREFIX = "line:";
+    private static final String LINE_ENTITY_KEY_PREFIX = "line:%s";
+    private static final String LINE_STOP_COUNT_KEY = "line_stop_count:%s";
+    private static final String LINE_STOPS_KEY = "line_stops:%s";
     private final ReactiveRedisOperations<String, Line> lineRedisOps;
     private final ReactiveRedisOperations<String, Stop> stopRedisOps;
+    private final ReactiveRedisOperations<String, Integer> intRedisOps;
 
-    private static final Logger logger = LoggerFactory.getLogger(LineRepositoryRedisImpl.class);
 
     @Autowired
     public LineRepositoryRedisImpl(ReactiveRedisOperations<String, Line> lineRedisOps,
-            ReactiveRedisOperations<String, Stop> stopRedisOps) {
+            ReactiveRedisOperations<String, Stop> stopRedisOps,
+            ReactiveRedisOperations<String, Integer> intRedisOps) {
         this.lineRedisOps = lineRedisOps;
         this.stopRedisOps = stopRedisOps;
+        this.intRedisOps = intRedisOps;
     }
 
     @Override
-    public Mono<Line> save(Line line) {
-        var key = LINE_ENTITY_KEY_PREFIX + line.getLineNumber();
+    public Mono<Line> create(Line line) {
+        var key = getLineEntityKey(line.getLineNumber());
 
-        return lineRedisOps.opsForValue()
-                .set(key, line)
-                .flatMap(success -> {
-                    if (success) {
-                        return Mono.just(line);
-                    } else {
-                        return Mono.error(new RuntimeException("Failed to save line to Redis"));
-                    }
-                })
-                .doOnSuccess(savedLine -> logger.info("Saved line with number: {}", line.getLineNumber()))
-                .doOnError(e -> logger.error("Error saving line with number: {}", line.getLineNumber(), e));
+        return deleteAllStopsOfLine(line.getLineNumber())
+                .then(lineRedisOps.opsForValue()
+                        .set(key, line)
+                        .flatMap(success -> {
+                            if (success) {
+                                return Mono.just(line);
+                            } else {
+                                return Mono.error(new EntityCreationFailureException("Failed to save line to Redis."));
+                            }
+                        }));
+
     }
 
     @Override
     public Mono<Line> addStopToLine(Line line, Stop stop) {
-        String key = "line_stops:" + line.getLineNumber();
-        return stopRedisOps.opsForList().rightPush(key, stop).then(Mono.just(line));
+        var lineStopsKey = getLineStopsKey(line.getLineNumber());
+        var lineStopCountKey = getLineStopCountKey(line.getLineNumber());
+
+        return stopRedisOps.opsForList().rightPush(lineStopsKey, stop)
+                .then(intRedisOps.opsForValue().increment(lineStopCountKey))
+                .then(Mono.just(line));
     }
 
     @Override
     public Mono<Line> findByLineNumber(String lineNumber) {
-        return lineRedisOps.opsForValue().get(LINE_ENTITY_KEY_PREFIX + lineNumber)
-                .switchIfEmpty(Mono.error(new EntityNotFoundException("Line not found for number: " + lineNumber)));
+        var key = getLineEntityKey(lineNumber);
+        return lineRedisOps.opsForValue().get(key);
     }
-
-    public Mono<Line> fetchLineWithStops(String lineNumber) {
-        return lineRedisOps.opsForValue().get(LINE_ENTITY_KEY_PREFIX + lineNumber)
-                .flatMap(line ->
-                        stopRedisOps.opsForList().range("line_stops:" + lineNumber, 0, -1)
-                                .collectList()
-                                .map(stops -> {
-                                    line.getStops().addAll(stops);
-                                    return line;
-                                }));
-
-    }
-
 
     @Override
     public Flux<Line> findAll() {
-        return lineRedisOps.keys(LINE_ENTITY_KEY_PREFIX + "*")
-                .flatMap(key -> fetchLineWithStops(key.substring(LINE_ENTITY_KEY_PREFIX.length())));
+        var key = getLineEntityKey("*");
+        return lineRedisOps.keys(key)
+                .flatMap(lineRedisOps.opsForValue()::get);
     }
 
     @Override
     public Mono<Long> deleteAll() {
-        return lineRedisOps.delete(lineRedisOps.keys(LINE_ENTITY_KEY_PREFIX + "*"));
+        var key = getLineEntityKey("*");
+        return deleteAllStopsOfLine("*")
+                .then(lineRedisOps.delete(lineRedisOps.keys(key)));
     }
 
-    @Override
-    public Long getStopCount(Line line) {
-        return lineRedisOps.keys("line_stops:*").count().block();
+    private Mono<Long> deleteAllStopsOfLine(String lineNumber) {
+        var lineStopsKey = getLineStopsKey(lineNumber);
+        var lineStopCountKey = getLineStopCountKey(lineNumber);
+        return stopRedisOps.delete(lineStopsKey)
+                .then(intRedisOps.delete(lineStopCountKey));
     }
+
+    public Mono<List<Stop>> fetchStopsOfLine(String lineNumber) {
+        var lineStopsKey = getLineStopsKey(lineNumber);
+        return stopRedisOps.opsForList()
+                .range(lineStopsKey, 0, -1)
+                .collectList();
+    }
+
+    public Mono<Integer> fetchStopCountOfLine(String lineNumber) {
+        var lineStopCountKey = getLineStopCountKey(lineNumber);
+        return intRedisOps.opsForValue().get(lineStopCountKey);
+    }
+
+    private String getLineEntityKey(String lineNumber) {
+        return LINE_ENTITY_KEY_PREFIX.formatted(lineNumber);
+    }
+
+    private String getLineStopsKey(String lineNumber) {
+        return LINE_STOPS_KEY.formatted(lineNumber);
+    }
+
+    private String getLineStopCountKey(String lineNumber) {
+        return LINE_STOP_COUNT_KEY.formatted(lineNumber);
+    }
+
 }

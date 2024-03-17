@@ -1,5 +1,6 @@
 package com.sbg.trafiklab.controller;
 
+
 import com.sbg.trafiklab.common.IntegrationTest;
 import com.sbg.trafiklab.dto.LineDTO;
 import com.sbg.trafiklab.dto.StopDTO;
@@ -22,81 +23,104 @@ public class LineControllerTest extends IntegrationTest {
     private DatabaseTestUtil databaseTestUtil;
 
     @Test
-    void testJourneyEndpointReturnsCorrectData() {
+    void testFindAll() {
 
-        var longestJourney = new LineDTO("3", List.of(
+        var longestLine = new LineDTO("3", 4, List.of(
                 new StopDTO("1", "Stop 1"),
                 new StopDTO("2", "Stop 2"),
                 new StopDTO("3", "Stop 3"),
                 new StopDTO("4", "Stop 4"))
         );
 
-        var shortestJourney = new LineDTO("2", List.of(
+        var shortestLine = new LineDTO("2", 2, List.of(
                 new StopDTO("1", "Stop 1"),
                 new StopDTO("2", "Stop 2")
         ));
 
-        var mediumJourney = new LineDTO("1", List.of(
+        var mediumLine = new LineDTO("1", 3, List.of(
                 new StopDTO("1", "Stop 1"),
                 new StopDTO("2", "Stop 2"),
                 new StopDTO("3", "Stop 3")
         ));
 
-        var journeys = List.of(
-                mediumJourney,
-                shortestJourney,
-                longestJourney);
+        var lines = List.of(
+                mediumLine,
+                shortestLine,
+                longestLine);
 
-        databaseTestUtil.createDataSet(journeys);
+        databaseTestUtil.createDataSet(lines);
 
-        webTestClient.get().uri("/journey?limit=" + journeys.size())
+        webTestClient.get().uri("/line?limit=" + lines.size())
                 .exchange()
                 .expectStatus().isOk()
                 .expectBodyList(LineDTO.class)
-                .hasSize(journeys.size())
+                .hasSize(lines.size())
                 .consumeWith(response -> {
                     var responseBody = response.getResponseBody();
 
                     assertNotNull(responseBody);
 
                     assertNotNull(responseBody.get(0));
-                    assertEquals(longestJourney.lineNumber(), responseBody.get(0).lineNumber());
+                    assertEquals(longestLine.lineNumber(), responseBody.get(0).lineNumber());
                     assertNotNull(responseBody.get(0).stops());
-                    assertEquals(longestJourney.stops().size(), responseBody.get(0).stops().size());
+                    assertEquals(longestLine.stops().size(), responseBody.get(0).stops().size());
 
                     assertNotNull(responseBody.get(1));
-                    assertEquals(mediumJourney.lineNumber(), responseBody.get(1).lineNumber());
+                    assertEquals(mediumLine.lineNumber(), responseBody.get(1).lineNumber());
                     assertNotNull(responseBody.get(1).stops());
-                    assertEquals(mediumJourney.stops().size(), responseBody.get(1).stops().size());
+                    assertEquals(mediumLine.stops().size(), responseBody.get(1).stops().size());
 
                     assertNotNull(responseBody.get(2));
-                    assertEquals(shortestJourney.lineNumber(), responseBody.get(2).lineNumber());
+                    assertEquals(shortestLine.lineNumber(), responseBody.get(2).lineNumber());
                     assertNotNull(responseBody.get(2).stops());
-                    assertEquals(shortestJourney.stops().size(), responseBody.get(2).stops().size());
+                    assertEquals(shortestLine.stops().size(), responseBody.get(2).stops().size());
                 });
 
-        webTestClient.get().uri("/journey?limit=" + (journeys.size() - 1))
+        webTestClient.get().uri("/line?limit=" + (lines.size() - 1))
                 .exchange()
                 .expectStatus().isOk()
                 .expectBodyList(LineDTO.class)
-                .hasSize(journeys.size() - 1)
+                .hasSize(lines.size() - 1)
                 .consumeWith(response -> {
                     var responseBody = response.getResponseBody();
 
                     assertNotNull(responseBody);
 
                     assertNotNull(responseBody.get(0));
-                    assertEquals(longestJourney.lineNumber(), responseBody.get(0).lineNumber());
+                    assertEquals(longestLine.lineNumber(), responseBody.get(0).lineNumber());
                     assertNotNull(responseBody.get(0).stops());
-                    assertEquals(longestJourney.stops().size(), responseBody.get(0).stops().size());
+                    assertEquals(longestLine.stops().size(), responseBody.get(0).stops().size());
 
                     assertNotNull(responseBody.get(1));
-                    assertEquals(mediumJourney.lineNumber(), responseBody.get(1).lineNumber());
+                    assertEquals(mediumLine.lineNumber(), responseBody.get(1).lineNumber());
                     assertNotNull(responseBody.get(1).stops());
-                    assertEquals(mediumJourney.stops().size(), responseBody.get(1).stops().size());
+                    assertEquals(mediumLine.stops().size(), responseBody.get(1).stops().size());
 
                 });
+    }
 
+    @Test
+    void testFindByLineNumber() {
+        var line = new LineDTO("1", 3, List.of(
+                new StopDTO("1", "Stop 1"),
+                new StopDTO("2", "Stop 2"),
+                new StopDTO("3", "Stop 3")
+        ));
+
+        databaseTestUtil.createDataSet(List.of(line));
+
+        webTestClient.get().uri("/line/" + line.lineNumber())
+                .exchange()
+                .expectStatus().isOk()
+                .expectBody(LineDTO.class)
+                .consumeWith(response -> {
+                    var responseBody = response.getResponseBody();
+
+                    assertNotNull(responseBody);
+                    assertEquals(line.lineNumber(), responseBody.lineNumber());
+                    assertNotNull(responseBody.stops());
+                    assertEquals(line.stops().size(), responseBody.stops().size());
+                });
     }
 
 }

@@ -1,16 +1,20 @@
 package com.sbg.trafiklab.entity;
 
+import java.io.Serializable;
 import java.util.Date;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Objects;
 
-public class Line {
+public class Line implements Serializable {
 
     private String lineNumber;
 
     private Date existsFromDate;
 
-    private List<Stop> stops = List.of();
+    private List<Stop> stops = new LinkedList<>();
+
+    private int stopCount;
 
     public String getLineNumber() {
         return lineNumber;
@@ -32,8 +36,8 @@ public class Line {
         return stops;
     }
 
-    public void addStop(Stop stop) {
-        stops.add(stop);
+    public void setStops(List<Stop> stops) {
+        this.stops = stops;
     }
 
     @Override
@@ -52,5 +56,13 @@ public class Line {
     @Override
     public int hashCode() {
         return Objects.hash(lineNumber, existsFromDate);
+    }
+
+    public int getStopCount() {
+        return stopCount;
+    }
+
+    public void setStopCount(int stopCount) {
+        this.stopCount = stopCount;
     }
 }

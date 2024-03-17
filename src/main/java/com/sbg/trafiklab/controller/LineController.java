@@ -1,6 +1,7 @@
 package com.sbg.trafiklab.controller;
 
 import com.sbg.trafiklab.dto.LineDTO;
+import com.sbg.trafiklab.entity.Line;
 import com.sbg.trafiklab.mapper.LineDTOMapper;
 import com.sbg.trafiklab.service.LineService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -29,8 +30,7 @@ public class LineController {
         return lineService.findAll(limit).map(LineDTOMapper::fromLine);
     }
 
-    @GetMapping
-    @RequestMapping("/{lineNumber}")
+    @GetMapping("/{lineNumber}")
     public Mono<LineDTO> findByLineNumber(@PathVariable String lineNumber) {
         return lineService.findByLineNumber(lineNumber).map(LineDTOMapper::fromLine);
     }

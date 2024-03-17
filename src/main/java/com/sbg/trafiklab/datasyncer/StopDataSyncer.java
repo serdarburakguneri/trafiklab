@@ -51,7 +51,7 @@ public class StopDataSyncer extends AbstractSLDataSyncer<Stop> {
     protected Mono<Void> saveEntity(Stop entity) {
         return stopService.create(entity)
                 .onErrorResume(e -> {
-                    logger.error("An error occurred while handling stop point: {}", e.getMessage(), e);
+                    logger.warn("An error occurred while handling stop point: {}", e.getMessage(), e);
                     return Mono.empty(); // Let's not stop the whole process if one entity fails to save
                 })
                 .then(Mono.empty());

@@ -6,7 +6,7 @@ import reactor.core.publisher.Mono;
 
 public interface StopRepository {
 
-    Mono<Stop> save(Stop stop);
+    Mono<Stop> create(Stop stop);
 
     Mono<Stop> findByStopNumber(String stopNumber);
 

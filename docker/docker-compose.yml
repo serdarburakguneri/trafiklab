@@ -2,11 +2,11 @@ version: "3.9"
 services:
   redis:
     image: redis:latest
-    command: redis-server --requirepass admin
+    command: redis-server
     ports:
-      - "6379:6379"
+      - "6389:6379"
     volumes:
-      - redis_data:/data/redis/trafik/new
+      - redis_data:/data/redis/trafiklab
 
 volumes:
   redis_data:

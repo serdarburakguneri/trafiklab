@@ -1,30 +1,31 @@
 package com.sbg.trafiklab.entity;
 
+import java.io.Serializable;
 import java.util.Date;
 import java.util.Objects;
 
-public class Stop {
+public class Stop implements Serializable {
 
-    private String stopPointNumber;
+    private String stopNumber;
 
-    private String stopPointName;
+    private String stopName;
 
     private Date existsFromDate;
 
-    public String getStopPointNumber() {
-        return stopPointNumber;
+    public String getStopNumber() {
+        return stopNumber;
     }
 
-    public void setStopPointNumber(String stopPointNumber) {
-        this.stopPointNumber = stopPointNumber;
+    public void setStopNumber(String stopNumber) {
+        this.stopNumber = stopNumber;
     }
 
-    public String getStopPointName() {
-        return stopPointName;
+    public String getStopName() {
+        return stopName;
     }
 
-    public void setStopPointName(String stopPointName) {
-        this.stopPointName = stopPointName;
+    public void setStopName(String stopName) {
+        this.stopName = stopName;
     }
 
     public Date getExistsFromDate() {
@@ -44,13 +45,13 @@ public class Stop {
             return false;
         }
         Stop other = (Stop) obj;
-        return Objects.equals(stopPointNumber, other.stopPointNumber) &&
-                Objects.equals(stopPointName, other.stopPointName) &&
+        return Objects.equals(stopNumber, other.stopNumber) &&
+                Objects.equals(stopName, other.stopName) &&
                 Objects.equals(existsFromDate, other.existsFromDate);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(stopPointNumber, stopPointName, existsFromDate);
+        return Objects.hash(stopNumber, stopName, existsFromDate);
     }
 }

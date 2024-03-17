@@ -1,9 +1,7 @@
 package com.sbg.trafiklab.repository;
 
 import com.sbg.trafiklab.entity.Stop;
-import com.sbg.trafiklab.exception.EntityNotFoundException;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import com.sbg.trafiklab.exception.EntityCreationFailureException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.redis.core.ReactiveRedisOperations;
 import org.springframework.stereotype.Service;
@@ -13,11 +11,9 @@ import reactor.core.publisher.Mono;
 @Service
 public class StopRepositoryRedisImpl implements StopRepository {
 
-    private static final String STOP_ENTITY_KEY_PREFIX = "stop:";
+    private static final String STOP_ENTITY_KEY_PREFIX = "stop:%s";
 
     private final ReactiveRedisOperations<String, Stop> stopRedisOps;
-
-    private static final Logger logger = LoggerFactory.getLogger(StopRepositoryRedisImpl.class);
 
     @Autowired
     public StopRepositoryRedisImpl(ReactiveRedisOperations<String, Stop> stopRedisOps) {
@@ -25,8 +21,8 @@ public class StopRepositoryRedisImpl implements StopRepository {
     }
 
     @Override
-    public Mono<Stop> save(Stop stop) {
-        var key = STOP_ENTITY_KEY_PREFIX + stop.getStopPointNumber();
+    public Mono<Stop> create(Stop stop) {
+        var key = getStopEntityKey(stop.getStopNumber());
 
         return stopRedisOps.opsForValue()
                 .set(key, stop)
@@ -34,30 +30,31 @@ public class StopRepositoryRedisImpl implements StopRepository {
                     if (success) {
                         return Mono.just(stop);
                     } else {
-                        return Mono.error(new RuntimeException("Failed to save stop point to Redis"));
+                        return Mono.error(new EntityCreationFailureException("Failed to save stop to Redis."));
                     }
-                })
-                .doOnSuccess(
-                        savedStop -> logger.info("Saved stop point with number: {}", stop.getStopPointNumber()))
-                .doOnError(e -> logger.error("Error saving stop point with number: {}", stop.getStopPointNumber(),
-                        e));
+                });
     }
 
     @Override
     public Mono<Stop> findByStopNumber(String stopNumber) {
-        return stopRedisOps.opsForValue().get(STOP_ENTITY_KEY_PREFIX + stopNumber)
-                .switchIfEmpty(
-                        Mono.error(new EntityNotFoundException("Stop point not found for number: " + stopNumber)));
+        var key = getStopEntityKey(stopNumber);
+        return stopRedisOps.opsForValue().get(key);
     }
 
     @Override
     public Flux<Stop> findAll() {
-        return stopRedisOps.keys(STOP_ENTITY_KEY_PREFIX + "*")
+        var key = getStopEntityKey("*");
+        return stopRedisOps.keys(key)
                 .flatMap(stopRedisOps.opsForValue()::get);
     }
 
     @Override
     public Mono<Long> deleteAll() {
-        return stopRedisOps.delete(stopRedisOps.keys(STOP_ENTITY_KEY_PREFIX + "*"));
+        var key = getStopEntityKey("*");
+        return stopRedisOps.delete(stopRedisOps.keys(key));
+    }
+
+    private String getStopEntityKey(String stopNumber) {
+        return STOP_ENTITY_KEY_PREFIX.formatted(stopNumber);
     }
 }

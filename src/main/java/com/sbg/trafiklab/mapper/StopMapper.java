@@ -7,8 +7,8 @@ public class StopMapper {
 
     public static Stop fromSLStopPoint(SLStopPoint slStopPoint) {
         var stopPoint = new Stop();
-        stopPoint.setStopPointNumber(Integer.toString(slStopPoint.stopPointNumber()));
-        stopPoint.setStopPointName(slStopPoint.stopPointName());
+        stopPoint.setStopNumber(Integer.toString(slStopPoint.stopPointNumber()));
+        stopPoint.setStopName(slStopPoint.stopPointName());
         stopPoint.setExistsFromDate(slStopPoint.existsFromDate());
         return stopPoint;
     }

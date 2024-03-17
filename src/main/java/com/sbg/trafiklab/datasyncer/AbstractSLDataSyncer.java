@@ -22,19 +22,17 @@ public abstract class AbstractSLDataSyncer<T> {
         this.resourceLoader = resourceLoader;
     }
 
-    public Mono<Boolean> syncData() {
-        logger.info("Syncing data started.");
+    public Mono<Void> syncData() {
         return readEntitiesFromJsonFile()
                 .flatMap(this::saveEntity)
-                .doOnComplete(() -> logger.info("Syncing data completed."))
+                .then()
+                .doOnSuccess(v -> logger.info("Syncing data completed."))
                 .onErrorResume(e -> {
-                    logger.error("Error during data sync: {}", e.getMessage(), e);
-                    return Mono.error(new RuntimeException("Error during data synchronization", e));
-                })
-                .then(Mono.just(true))
-                .onErrorReturn(false);
+                    var message = "An error occurred during data synchronization.";
+                    logger.error(message, e);
+                    return Mono.error(new IllegalStateException(message, e));
+                });
     }
-
 
     protected Flux<T> readEntitiesFromJsonFile() {
         return Flux.create(fluxSink -> {
@@ -54,9 +52,11 @@ public abstract class AbstractSLDataSyncer<T> {
 
                     if ("StatusCode".equals(fieldName)) {
                         parser.nextToken();
-                        if (parser.getIntValue() != 0) {
-                            var errorMessage = ("Fetching traffic data failed due to an Api error. "
-                                    + "Please check file at [%s] for more details.").formatted(uri);
+                        var statusCode = parser.getIntValue();
+                        if (statusCode != 0) {
+                            var errorMessage = (
+                                    "Syncing traffic data failed due to incomplete data. Api Response for fetching the data is: %s. "
+                                            + "Please check file at [%s] for more details.").formatted(statusCode, uri);
                             logger.error(errorMessage);
                             fluxSink.error(new IllegalStateException(errorMessage));
                             return;

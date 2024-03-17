@@ -35,4 +35,10 @@ public class RedisConfiguration {
     public ReactiveRedisOperations<String, Line> lineOperations(ReactiveRedisConnectionFactory factory) {
         return reactiveRedisOperations(factory, Line.class);
     }
+
+    @Bean
+    public ReactiveRedisOperations<String, Integer> integerOperations(ReactiveRedisConnectionFactory factory) {
+        return reactiveRedisOperations(factory, Integer.class);
+    }
+
 }

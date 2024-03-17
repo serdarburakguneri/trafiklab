@@ -18,7 +18,7 @@ public class ApplicationExceptionHandler {
     @ExceptionHandler(Exception.class)
     public ResponseEntity<ErrorMessage> handleException(Exception ex) {
 
-        var errorMessage = "We are sorry.";
+        var errorMessage = "An internal server error occurred.";
         logger.error("An unexpected error occurred.", ex);
         return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                 .body(new ErrorMessage(errorMessage));

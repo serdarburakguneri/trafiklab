@@ -49,9 +49,9 @@ public class JourneyPatternDataSyncer extends AbstractSLDataSyncer<JourneyPatter
 
     @Override
     protected Mono<Void> saveEntity(JourneyPattern entity) {
-        return lineService.addStopToLine(entity.getLineNumber(), entity.getStopPointNumber())
+        return lineService.addStopToLine(entity.getLineNumber(), entity.getStopNumber())
                 .onErrorResume(e -> {
-                    logger.error("An error occurred while handling journey pattern: {}", e.getMessage(), e);
+                    logger.warn("An error occurred while handling journey pattern: {}", e.getMessage(), e);
                     return Mono.empty(); // Let's not stop the whole process if one entity fails to save
                 })
                 .then(Mono.empty());

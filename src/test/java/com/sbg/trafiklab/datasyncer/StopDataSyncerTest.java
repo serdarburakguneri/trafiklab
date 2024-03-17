@@ -8,24 +8,31 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.sbg.trafiklab.integration.dto.SLStopPoint;
 import com.sbg.trafiklab.service.StopService;
 import java.io.IOException;
-import java.time.LocalDate;
+import java.util.Date;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.MockitoAnnotations;
 import org.springframework.core.io.ResourceLoader;
 
-class StopDataSyncerTest {
+public class StopDataSyncerTest {
 
-    private StopDataSyncer stopDataSyncer;
+    @Mock
     private ObjectMapper mockObjectMapper;
+
+    @Mock
     private ResourceLoader mockResourceLoader;
+
+    @Mock
     private StopService mockStopService;
+
+    @InjectMocks
+    private StopDataSyncer stopDataSyncer;
 
     @BeforeEach
     void setUp() {
-        mockObjectMapper = mock(ObjectMapper.class);
-        mockResourceLoader = mock(ResourceLoader.class);
-        mockStopService = mock(StopService.class);
-        stopDataSyncer = new StopDataSyncer(mockObjectMapper, mockResourceLoader, mockStopService);
+        MockitoAnnotations.openMocks(this);
     }
 
     @Test
@@ -33,7 +40,7 @@ class StopDataSyncerTest {
         var mockJsonParser = mock(JsonParser.class);
         var pointNumber = 1;
         var pointName = "Fridhemsplan";
-        var lastModified = LocalDate.now().minusDays(1);
+        var lastModified = new Date();
         var sampleData = new SLStopPoint(pointNumber, pointName, 1, 1, 1, "", "", lastModified, lastModified);
 
         when(mockObjectMapper.readValue(mockJsonParser, SLStopPoint.class)).thenReturn(sampleData);
@@ -42,8 +49,8 @@ class StopDataSyncerTest {
 
         verify(mockObjectMapper, times(1)).readValue(mockJsonParser, SLStopPoint.class);
         assertNotNull(result);
-        assertEquals(Integer.toString(pointNumber), result.getStopPointNumber());
-        assertEquals(pointName, result.getStopPointName());
+        assertEquals(Integer.toString(pointNumber), result.getStopNumber());
+        assertEquals(pointName, result.getStopName());
         assertEquals(lastModified, result.getExistsFromDate());
     }
 

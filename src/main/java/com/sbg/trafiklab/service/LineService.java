@@ -1,6 +1,9 @@
 package com.sbg.trafiklab.service;
 
 import com.sbg.trafiklab.entity.Line;
+import com.sbg.trafiklab.exception.EntityCreationFailureException;
+import com.sbg.trafiklab.exception.EntityNotFoundException;
+import com.sbg.trafiklab.exception.EntityUpdateException;
 import com.sbg.trafiklab.repository.LineRepository;
 import com.sbg.trafiklab.repository.StopRepository;
 import org.slf4j.Logger;
@@ -26,35 +29,69 @@ public class LineService {
     }
 
     public Mono<Line> create(Line line) {
-        return lineRepository.save(line);
-    }
-
-    public Mono<Line> save(Line line) {
-        return lineRepository.save(line);
+        return lineRepository.create(line)
+                .onErrorResume(e -> {
+                    var message = "An error occurred while creating line.";
+                    logger.error(message, e);
+                    return Mono.error(new EntityCreationFailureException(message, e));
+                });
     }
 
     public Mono<Line> addStopToLine(String lineNumber, String stopNumber) {
-
         return lineRepository.findByLineNumber(lineNumber)
+                .switchIfEmpty(Mono.error(new EntityNotFoundException("Line not found with number: " + lineNumber)))
                 .flatMap(line -> stopRepository.findByStopNumber(stopNumber)
-                        .flatMap(stop -> lineRepository.addStopToLine(line, stop)));
-
-    }
-
-    public Mono<Long> getStopCountForLine(Line line) {
-        return lineRepository.getStopCount(line);
+                        .switchIfEmpty(
+                                Mono.error(new EntityNotFoundException("Stop not found with number: " + stopNumber)))
+                        .flatMap(stop -> lineRepository.addStopToLine(line, stop)))
+                .onErrorResume(e -> {
+                    var message = "An error occurred while adding stop to line.";
+                    logger.error(message, e);
+                    return Mono.error(new EntityUpdateException(message, e));
+                });
     }
 
 
     public Mono<Line> findByLineNumber(String lineNumber) {
-        return lineRepository.findByLineNumber(lineNumber);
+        return lineRepository.findByLineNumber(lineNumber)
+                .switchIfEmpty(Mono.error(new EntityNotFoundException("Line not found with number: " + lineNumber)))
+                .flatMap(line -> lineRepository.fetchStopsOfLine(line.getLineNumber())
+                        .map(stops -> {
+                            line.setStops(stops);
+                            return line;
+                        }))
+                .flatMap(line -> lineRepository.fetchStopCountOfLine(line.getLineNumber())
+                        .map(stopCount -> {
+                            line.setStopCount(stopCount);
+                            return line;
+                        }))
+                .onErrorResume(e -> {
+                    var message = "An error occurred while finding line by number.";
+                    logger.error(message, e);
+                    return Mono.error(new EntityUpdateException(message, e));
+                });
     }
+
 
     public Flux<Line> findAll(int limit) {
         return lineRepository.findAll()
+                .flatMap(line -> lineRepository.fetchStopCountOfLine(line.getLineNumber())
+                        .map(stopCount -> {
+                            line.setStopCount(stopCount);
+                            return line;
+                        }))
                 .sort((line1, line2) ->
-                        Long.compare(lineRepository.getStopCount(line2), lineRepository.getStopCount(line2)))
-                .take(limit);
+                        Integer.compare(line2.getStopCount(), line1.getStopCount()))
+                .take(limit)
+                .flatMap(line -> lineRepository.fetchStopsOfLine(line.getLineNumber())
+                        .map(stops -> {
+                            line.getStops().addAll(stops);
+                            return line;
+                        }));
+    }
+
+    public Mono<Long> deleteAll() {
+        return lineRepository.deleteAll();
     }
 
 }

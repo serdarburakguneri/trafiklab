@@ -1,14 +1,15 @@
 package com.sbg.trafiklab.entity;
 
+import java.io.Serializable;
 import java.util.Date;
 import java.util.Objects;
 
 
-public class JourneyPattern {
+public class JourneyPattern implements Serializable {
 
     private String lineNumber;
 
-    private String stopPointNumber;
+    private String stopNumber;
 
     private String direction;
 
@@ -22,12 +23,12 @@ public class JourneyPattern {
         this.lineNumber = lineNumber;
     }
 
-    public String getStopPointNumber() {
-        return stopPointNumber;
+    public String getStopNumber() {
+        return stopNumber;
     }
 
-    public void setStopPointNumber(String stopPointNumber) {
-        this.stopPointNumber = stopPointNumber;
+    public void setStopNumber(String stopNumber) {
+        this.stopNumber = stopNumber;
     }
 
     public String getDirection() {
@@ -56,13 +57,13 @@ public class JourneyPattern {
         }
         JourneyPattern other = (JourneyPattern) obj;
         return Objects.equals(lineNumber, other.lineNumber) &&
-                Objects.equals(stopPointNumber, other.stopPointNumber) &&
+                Objects.equals(stopNumber, other.stopNumber) &&
                 Objects.equals(direction, other.direction) &&
                 Objects.equals(existsFromDate, other.existsFromDate);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(lineNumber, stopPointNumber, direction, existsFromDate);
+        return Objects.hash(lineNumber, stopNumber, direction, existsFromDate);
     }
 }

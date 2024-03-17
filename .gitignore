@@ -54,9 +54,3 @@ hs_err_pid*
 
 # Virtual Machine Crash Logs
 hs_err_pid*
-
-# Traffic data
-journey.json
-result.json
-line.json
-stops.json

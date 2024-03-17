@@ -3,12 +3,13 @@ package com.sbg.trafiklab.scheduler;
 import com.sbg.trafiklab.datasyncer.JourneyPatternDataSyncer;
 import com.sbg.trafiklab.datasyncer.LineDataSyncer;
 import com.sbg.trafiklab.datasyncer.StopDataSyncer;
-import com.sbg.trafiklab.datawriter.JourneyPatternDataWriter;
-import com.sbg.trafiklab.datawriter.LineDataWriter;
-import com.sbg.trafiklab.datawriter.StopDataWriter;
+import com.sbg.trafiklab.datafilewriter.JourneyPatternDataFileWriter;
+import com.sbg.trafiklab.datafilewriter.LineDataFileWriter;
+import com.sbg.trafiklab.datafilewriter.StopDataFileWriter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import reactor.core.publisher.Mono;
@@ -16,9 +17,12 @@ import reactor.core.publisher.Mono;
 @Service
 public class TrafficDataSyncScheduler {
 
-    private final LineDataWriter lineDataWriter;
-    private final StopDataWriter stopDataWriter;
-    private final JourneyPatternDataWriter journeyPatternDataWriter;
+    @Value("${trafiklab.data.fetch-from-api}")
+    private boolean fetchFromAPI;
+
+    private final LineDataFileWriter lineDataWriter;
+    private final StopDataFileWriter stopDataWriter;
+    private final JourneyPatternDataFileWriter journeyPatternDataWriter;
     private final LineDataSyncer lineDataSyncer;
     private final StopDataSyncer stopDataSyncer;
     private final JourneyPatternDataSyncer journeyPatternDataSyncer;
@@ -26,9 +30,9 @@ public class TrafficDataSyncScheduler {
     private static final Logger logger = LoggerFactory.getLogger(TrafficDataSyncScheduler.class);
 
     @Autowired
-    public TrafficDataSyncScheduler(LineDataWriter lineDataWriter,
-            StopDataWriter stopDataWriter,
-            JourneyPatternDataWriter journeyPatternDataWriter,
+    public TrafficDataSyncScheduler(LineDataFileWriter lineDataWriter,
+            StopDataFileWriter stopDataWriter,
+            JourneyPatternDataFileWriter journeyPatternDataWriter,
             LineDataSyncer lineDataSyncer,
             StopDataSyncer stopDataSyncer,
             JourneyPatternDataSyncer journeyPatternDataSyncer) {
@@ -43,34 +47,27 @@ public class TrafficDataSyncScheduler {
     @Scheduled(cron = "0 0 3 * * ?", zone = "CET")
     public void syncTrafficData() {
 
-        //lineDataWriter.fetchAndWriteData()
-        //      .then(stopPointDataWriter.fetchAndWriteData())
-        //    .then(journeyPatternDataWriter.fetchAndWriteData())
-        lineDataSyncer.syncData()
-                .flatMap(success -> {
-                    if (!success) {
-                        return Mono.error(new RuntimeException("Line data sync failed."));
-                    }
-                    return stopDataSyncer.syncData();
-                })
-                .flatMap(success -> {
-                    if (!success) {
-                        return Mono.error(new RuntimeException("Stop point data sync failed."));
-                    }
-                    return journeyPatternDataSyncer.syncData();
-                })
-                .subscribe(
-                        success -> {
-                            if (success) {
-                                System.out.println("All syncs completed successfully");
-                            } else {
-                                System.out.println("Last sync failed");
-                            }
-                        },
-                        error -> System.err.println("Error occurred: " + error.getMessage())
-                );
+        if (!fetchFromAPI) {
+            logger.info("Traffic data fetch from API is disabled by configuration. Fetching data from local files.");
+        }
 
-        //A retry mechanism can be added here for sync failures
+        var flow = fetchFromAPI ? fetchDataFromApi().then(syncData()) : syncData();
+
+        flow.subscribe(
+                success -> logger.info("Traffic data fetch and sync process completed successfully."),
+                error -> logger.error("Traffic data fetch and sync process failed due to error: ", error));
+    }
+
+    private Mono<Void> fetchDataFromApi() {
+        return lineDataWriter.fetchDataAndWriteToFile()
+                .then(stopDataWriter.fetchDataAndWriteToFile())
+                .then(journeyPatternDataWriter.fetchDataAndWriteToFile());
+    }
+
+    private Mono<Void> syncData() {
+        return lineDataSyncer.syncData()
+                .then(stopDataSyncer.syncData())
+                .then(journeyPatternDataSyncer.syncData());
     }
 
 }
