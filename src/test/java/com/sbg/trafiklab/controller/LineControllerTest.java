@@ -72,25 +72,41 @@ public class LineControllerTest extends IntegrationTest {
                     assertEquals(shortestLine.stops().size(), responseBody.get(2).stops().size());
                 });
 
-        webTestClient.get().uri("/line?limit=" + (lines.size() - 1))
+    }
+
+    @Test
+    void testFindAllWithLimiting() {
+
+        var line1 = new LineDTO("3", 4, List.of(
+                new StopDTO("1", "Stop 1"),
+                new StopDTO("2", "Stop 2"),
+                new StopDTO("3", "Stop 3"),
+                new StopDTO("4", "Stop 4"))
+        );
+
+        var line2 = new LineDTO("2", 2, List.of(
+                new StopDTO("1", "Stop 1"),
+                new StopDTO("2", "Stop 2")
+        ));
+
+        var lines = List.of(line1, line2);
+
+        db().createDataSet(lines);
+
+        webTestClient.get().uri("/line?limit=" + 1)
                 .exchange()
                 .expectStatus().isOk()
                 .expectBodyList(LineDTO.class)
-                .hasSize(lines.size() - 1)
+                .hasSize(1)
                 .consumeWith(response -> {
                     var responseBody = response.getResponseBody();
 
                     assertNotNull(responseBody);
 
                     assertNotNull(responseBody.get(0));
-                    assertEquals(longestLine.lineNumber(), responseBody.get(0).lineNumber());
+                    assertEquals(line1.lineNumber(), responseBody.get(0).lineNumber());
                     assertNotNull(responseBody.get(0).stops());
-                    assertEquals(longestLine.stops().size(), responseBody.get(0).stops().size());
-
-                    assertNotNull(responseBody.get(1));
-                    assertEquals(mediumLine.lineNumber(), responseBody.get(1).lineNumber());
-                    assertNotNull(responseBody.get(1).stops());
-                    assertEquals(mediumLine.stops().size(), responseBody.get(1).stops().size());
+                    assertEquals(line1.stops().size(), responseBody.get(0).stops().size());
 
                 });
     }
