@@ -4,7 +4,6 @@ package com.sbg.trafiklab.controller;
 import com.sbg.trafiklab.common.IntegrationTest;
 import com.sbg.trafiklab.dto.LineDTO;
 import com.sbg.trafiklab.dto.StopDTO;
-import com.sbg.trafiklab.util.DatabaseTestUtil;
 import java.util.List;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -18,9 +17,6 @@ public class LineControllerTest extends IntegrationTest {
 
     @Autowired
     private WebTestClient webTestClient;
-
-    @Autowired
-    private DatabaseTestUtil databaseTestUtil;
 
     @Test
     void testFindAll() {
@@ -48,7 +44,7 @@ public class LineControllerTest extends IntegrationTest {
                 shortestLine,
                 longestLine);
 
-        databaseTestUtil.createDataSet(lines);
+        db().createDataSet(lines);
 
         webTestClient.get().uri("/line?limit=" + lines.size())
                 .exchange()
@@ -107,7 +103,7 @@ public class LineControllerTest extends IntegrationTest {
                 new StopDTO("3", "Stop 3")
         ));
 
-        databaseTestUtil.createDataSet(List.of(line));
+        db().createDataSet(List.of(line));
 
         webTestClient.get().uri("/line/" + line.lineNumber())
                 .exchange()

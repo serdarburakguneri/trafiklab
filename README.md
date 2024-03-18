@@ -171,7 +171,13 @@ curl -i http://localhost:8080/line/505
 
 An example output is like;
 
-![Example Image](images/lineDetails.png)
+HTTP/1.1 200 OK
+Content-Type: application/json
+Content-Length: 2397
+
+```json
+{"lineNumber":"515","stopCount":40,"stops":[{"stopPointNumber":"10345","stopPointName":"Odenplan"},{"stopPointNumber":"10547","stopPointName":"Stadsbiblioteket"},{"stopPointNumber":"10549","stopPointName":"Frejgatan"},{"stopPointNumber":"10551","stopPointName":"Sveaplan"},{"stopPointNumber":"10553","stopPointName":"Norrtull"},{"stopPointNumber":"50005","stopPointName":"Haga södra"},{"stopPointNumber":"50304","stopPointName":"Sundbybergs station"},{"stopPointNumber":"50308","stopPointName":"Sundbybergs skola"},{"stopPointNumber":"50348","stopPointName":"Vasalund"},{"stopPointNumber":"50350","stopPointName":"Dalvägen"},{"stopPointNumber":"50352","stopPointName":"Solna station"},{"stopPointNumber":"50354","stopPointName":"Kolonnvägen"},{"stopPointNumber":"50403","stopPointName":"Råsunda"},{"stopPointNumber":"50405","stopPointName":"Uppfartsvägen"},{"stopPointNumber":"50407","stopPointName":"Näckrosen"},{"stopPointNumber":"50409","stopPointName":"Bokvägen"},{"stopPointNumber":"50435","stopPointName":"Tuletorget"},{"stopPointNumber":"50437","stopPointName":"Sundbybergs idrottsplats"},{"stopPointNumber":"51861","stopPointName":"Stationsgatan"},{"stopPointNumber":"52318","stopPointName":"Haga norra"},{"stopPointNumber":"10550","stopPointName":"Frejgatan"},{"stopPointNumber":"10552","stopPointName":"Sveaplan"},{"stopPointNumber":"10554","stopPointName":"Norrtull"},{"stopPointNumber":"10798","stopPointName":"Odenplan"},{"stopPointNumber":"50006","stopPointName":"Haga södra"},{"stopPointNumber":"50010","stopPointName":"Haga norra"},{"stopPointNumber":"50148","stopPointName":"Kolonnvägen"},{"stopPointNumber":"50305","stopPointName":"Stationsgatan"},{"stopPointNumber":"50349","stopPointName":"Vasalund"},{"stopPointNumber":"50351","stopPointName":"Dalvägen"},{"stopPointNumber":"50404","stopPointName":"Råsunda"},{"stopPointNumber":"50406","stopPointName":"Uppfartsvägen"},{"stopPointNumber":"50408","stopPointName":"Näckrosen"},{"stopPointNumber":"50410","stopPointName":"Bokvägen"},{"stopPointNumber":"50434","stopPointName":"Solna station"},{"stopPointNumber":"50436","stopPointName":"Tuletorget"},{"stopPointNumber":"50438","stopPointName":"Sundbybergs idrottsplats"},{"stopPointNumber":"50439","stopPointName":"Sundbybergs station"},{"stopPointNumber":"50440","stopPointName":"Sundbybergs skola"},{"stopPointNumber":"50443","stopPointName":"Stadsbiblioteket"}]}
+```
 
 
 ## Viewing all the stops

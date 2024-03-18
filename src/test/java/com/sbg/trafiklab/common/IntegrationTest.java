@@ -35,4 +35,8 @@ public class IntegrationTest {
         databaseTestUtil.clearDatabase();
     }
 
+    public DatabaseTestUtil db() {
+        return databaseTestUtil;
+    }
+
 }
