@@ -97,15 +97,15 @@ public class LineControllerTest extends IntegrationTest {
 
     @Test
     void testFindByLineNumber() {
-        var line = new LineDTO("1", 3, List.of(
+        var lines = new LineDTO("1", 3, List.of(
                 new StopDTO("1", "Stop 1"),
                 new StopDTO("2", "Stop 2"),
                 new StopDTO("3", "Stop 3")
         ));
 
-        db().createDataSet(List.of(line));
+        db().createDataSet(List.of(lines));
 
-        webTestClient.get().uri("/line/" + line.lineNumber())
+        webTestClient.get().uri("/line/" + lines.lineNumber())
                 .exchange()
                 .expectStatus().isOk()
                 .expectBody(LineDTO.class)
@@ -113,9 +113,9 @@ public class LineControllerTest extends IntegrationTest {
                     var responseBody = response.getResponseBody();
 
                     assertNotNull(responseBody);
-                    assertEquals(line.lineNumber(), responseBody.lineNumber());
+                    assertEquals(lines.lineNumber(), responseBody.lineNumber());
                     assertNotNull(responseBody.stops());
-                    assertEquals(line.stops().size(), responseBody.stops().size());
+                    assertEquals(lines.stops().size(), responseBody.stops().size());
                 });
     }
 
